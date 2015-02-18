@@ -21,7 +21,7 @@ my_data_label_test = my_data_label[trainInd[num_data_sub/cvfolder:num_data_sub],
 
 num_col = len(my_data_label[0])
 
-for ii in range(1,8):
+for ii in range(0,8):
     my_data_label1 = genfromtxt(featureFolderPath + activities[ii] + '_features.csv', delimiter=',')
     num_data1 = len(my_data_label1) 
     num_data_sub1 = num_data1/subFactor
@@ -61,4 +61,10 @@ predicted_test = classifier.predict(my_data_test)
 print("Classification report for test set %s:\n%s\n"
       % (classifier, metrics.classification_report(expected_test, predicted_test)))
 print("Confusion matrix for test set:\n%s" % metrics.confusion_matrix(expected_test, predicted_test))
+
+# Save the trained classifier into disk
+from sklearn.externals import joblib
+joblib.dump(classifier,'mySVM.pkl')
+
+# classifier1 = joblib.load('mySVM.pkl')
 

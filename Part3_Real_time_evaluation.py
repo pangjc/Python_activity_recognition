@@ -8,25 +8,15 @@ from common import nothing, clock, draw_str
 import csv
 import os
 
-
 MHI_DURATION = 15
 MAX_TIME_DELTA = 10
 MIN_TIME_DELTA = 5
 THRESH_VALUE = 32
 
-def draw_motion_comp(vis, (x, y, w, h), angle, color):
-    cv2.rectangle(vis, (x, y), (x+w, y+h), (0, 255, 0))
-    r = min(w/2, h/2)
-    cx, cy = x+w/2, y+h/2
-    angle = angle*np.pi/180
-    cv2.circle(vis, (cx, cy), r, color, 3)
-    cv2.line(vis, (cx, cy), (int(cx+np.cos(angle)*r), int(cy+np.sin(angle)*r)), color, 3)
-
-
-
-def mhi_video_extraction_save(videoName, featureWriter, case, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,DISPLAY=False): 
+def real_time_evaluation(videoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,DISPLAY=False): 
     cv2.namedWindow('rat activity recognition')
     visuals = ['input', 'frame_diff', 'motion_hist', 'grad_orient']
+    # use MHI features (motion history intensity)
     visual_name = visuals[2]
   
     cam = cv2.VideoCapture(videoName)
@@ -37,7 +27,11 @@ def mhi_video_extraction_save(videoName, featureWriter, case, MIN_TIME_DELTA,MAX
     motion_history = np.zeros((h, w), np.float32)
     hsv = np.zeros((h, w, 3), np.uint8)
     hsv[:,:,1] = 255
-    ii = 0         
+    
+    ii = 0        
+    
+    #cam.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ii)
+     
     while (ii<video_len):
         ii += 1
         ret, frame = cam.read()
@@ -49,10 +43,7 @@ def mhi_video_extraction_save(videoName, featureWriter, case, MIN_TIME_DELTA,MAX
         cv2.updateMotionHistory(motion_mask, motion_history, timestamp, MHI_DURATION)
         mg_mask, mg_orient = cv2.calcMotionGradient(motion_history, MAX_TIME_DELTA, MIN_TIME_DELTA, apertureSize=5 )
         seg_mask, seg_bounds = cv2.segmentMotion(motion_history, timestamp, MAX_TIME_DELTA)
-        ##### Debug visualizaton
-      
 
-        #####
         if visual_name == 'input':
             vis = frame.copy()
         elif visual_name == 'frame_diff':
@@ -85,65 +76,51 @@ def mhi_video_extraction_save(videoName, featureWriter, case, MIN_TIME_DELTA,MAX
         else:
             cx2 = 0;
             cy2 = 0;     
-        
-                     
-                                 
+                                       
         meiSize = np.count_nonzero(mei0);
         
-        featureWriter.writerow((Hu1[0][0],Hu1[1][0],Hu1[2][0],Hu1[3][0],Hu1[4][0],Hu1[5][0],Hu1[6][0],
+        features = (Hu1[0][0],Hu1[1][0],Hu1[2][0],Hu1[3][0],Hu1[4][0],Hu1[5][0],Hu1[6][0],
                                 Hu2[0][0],Hu2[1][0],Hu2[2][0],Hu2[3][0],Hu2[4][0],Hu2[5][0],Hu2[6][0],
-                                cx1, cy1, cx2, cy2, meiSize, case))
+                                cx1, cy1, cx2, cy2, meiSize)
        
+        tag = classifier.predict(features[0:18])
+        activity = activities[tag]  
+            
+        prev_frame = frame.copy()      
+     
                             
         if DISPLAY:
-            #draw_str(vis, (20, 20), visual_name)
-            vis = cv2.cvtColor(vis0, cv2.COLOR_GRAY2BGR)
-            mei = cv2.cvtColor(mei0, cv2.COLOR_GRAY2BGR)
-            cv2.imshow('MHI', vis)
-            cv2.imshow('MEI', mei)
+            cv2.putText(frame, activity, (5, 25),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,255,255))
+  
             cv2.imshow('Video',frame)
-    
-            prev_frame = frame.copy()
             if 0xff & cv2.waitKey(50) == 27:
                 break
-
-            
             
     cam.release()
     cv2.destroyAllWindows()
 
-        
 if __name__ == '__main__':
-    import sys
+    from sklearn.externals import joblib
     from os import listdir
     
+    classifier = joblib.load('mySVM.pkl')
+    
     activities = ['drink','eat','groom','hang','head','rear','rest','walk']
-    actLens = [30,130,594,139,30,68,720,52]
-    
     folderRoot = 'C:\\InternProjects\\rat_activity_recognition\\MIT_Traning_samples' 
-
     
-    for case in range(0,8):
-        print 'Feature exactracting: ' + activities[case]
-        subFolderPath = folderRoot + '\\' + activities[case]
-        
-        videoNames = listdir(subFolderPath)
-        featureSaveName = folderRoot + '\\' + '_Feature_Exact' + '\\' + activities[case] + '_features.csv'
-        
-        fout = open(featureSaveName, 'wb')
-        featureWriter = csv.writer(fout,quoting=csv.QUOTE_NONE)
-        for ii in range(0,actLens[case]/2):
-            fullVideoName = subFolderPath +'\\'+ videoNames[ii]
-     
-            #mhi_video_extraction(fullVideoName, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE) 
-            mhi_video_extraction_save(fullVideoName, featureWriter, case, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,False)
+    testVideoName = 'C:\\InternProjects\\MIT_NatureSetUp\\full_database\\20080422170445.mpg'    
+    real_time_evaluation(testVideoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
+  
+  #  for case in range(3,4):
+  #      subFolderPath = folderRoot + '\\' + activities[case]
+  #      
+  #      videoNames = listdir(subFolderPath)
+  #      actLens = [30,130,594,139,30,68,720,52]
 
-        fout.close()
-        # Set output the csv file 
-        #csvOutputName = dirName+"/"+videoBaseName+"_features.csv"
-        ##print(csvOutputName)
-        #fout = open(csvOutputName, 'wb')
-        #writer = csv.writer(fout)
-        #writer.writerow( ('video name','frame number', 'centroid x', 'centroid y','size','orientation','proportion A','proportion B','proportion C','proportion U') )
+  #      for ii in range(0,actLens[case]):
+  #          testVideoName = subFolderPath +'\\'+ videoNames[ii]
+  #          real_time_evaluation(testVideoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
+   
 
-    
+        
