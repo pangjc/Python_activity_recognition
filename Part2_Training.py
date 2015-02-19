@@ -11,7 +11,7 @@ featureFolderPath = 'C:\\InternProjects\\rat_activity_recognition\\MIT_Traning_s
 activities = ['drink','eat','groom','hang','head','rear','rest','walk']
 
 cvfolder = 3
-subFactor = 2
+subFactor = 1
 my_data_label = genfromtxt(featureFolderPath + activities[0] + '_features.csv', delimiter=',')
 num_data = len(my_data_label) 
 num_data_sub = num_data/subFactor
@@ -34,11 +34,11 @@ for ii in range(0,8):
 print 'training data size: ' + str(my_data_label_train.shape)
 print 'test data size: ' + str(my_data_label_test.shape)
 
-my_data_train = my_data_label_train[:,0:num_col-2]  
+my_data_train = my_data_label_train[:,num_col-6:num_col-2]  
 my_label_train = my_data_label_train[:,num_col-1]
 my_label_train = my_label_train.astype(int)
 
-my_data_test = my_data_label_test[:,0:num_col-2]  
+my_data_test = my_data_label_test[:,num_col-6:num_col-2]  
 my_label_test = my_data_label_test[:,num_col-1]
 my_label_test = my_label_test.astype(int)
 # Create a classifier: a support vector classifier

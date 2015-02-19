@@ -79,11 +79,11 @@ def real_time_evaluation(videoName, classifier, activities, MIN_TIME_DELTA,MAX_T
                                        
         meiSize = np.count_nonzero(mei0);
         
-        features = (Hu1[0][0],Hu1[1][0],Hu1[2][0],Hu1[3][0],Hu1[4][0],Hu1[5][0],Hu1[6][0],
+        features = [Hu1[0][0],Hu1[1][0],Hu1[2][0],Hu1[3][0],Hu1[4][0],Hu1[5][0],Hu1[6][0],
                                 Hu2[0][0],Hu2[1][0],Hu2[2][0],Hu2[3][0],Hu2[4][0],Hu2[5][0],Hu2[6][0],
-                                cx1, cy1, cx2, cy2, meiSize)
+                                cx1, cy1, cx2, cy2, meiSize]
        
-        tag = classifier.predict(features[0:18])
+        tag = classifier.predict(features[14:18])
         activity = activities[tag]  
             
         prev_frame = frame.copy()      
@@ -112,15 +112,16 @@ if __name__ == '__main__':
     testVideoName = 'C:\\InternProjects\\MIT_NatureSetUp\\full_database\\20080422170445.mpg'    
     real_time_evaluation(testVideoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
   
-  #  for case in range(3,4):
-  #      subFolderPath = folderRoot + '\\' + activities[case]
-  #      
-  #      videoNames = listdir(subFolderPath)
-  #      actLens = [30,130,594,139,30,68,720,52]
+'''
+    for case in range(3,4):
+        subFolderPath = folderRoot + '\\' + activities[case]
+        
+        videoNames = listdir(subFolderPath)
+        actLens = [30,130,594,139,30,68,720,52]
 
-  #      for ii in range(0,actLens[case]):
-  #          testVideoName = subFolderPath +'\\'+ videoNames[ii]
-  #          real_time_evaluation(testVideoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
-   
+        for ii in range(0,actLens[case]):
+            testVideoName = subFolderPath +'\\'+ videoNames[ii]
+            real_time_evaluation(testVideoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
+'''  
 
         

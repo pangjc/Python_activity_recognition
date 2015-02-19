@@ -14,14 +14,6 @@ MAX_TIME_DELTA = 10
 MIN_TIME_DELTA = 5
 THRESH_VALUE = 32
 
-#def draw_motion_comp(vis, (x, y, w, h), angle, color):
-#    cv2.rectangle(vis, (x, y), (x+w, y+h), (0, 255, 0))
-#    r = min(w/2, h/2)
-#    cx, cy = x+w/2, y+h/2
-#    angle = angle*np.pi/180
-#    cv2.circle(vis, (cx, cy), r, color, 3)
-#    cv2.line(vis, (cx, cy), (int(cx+np.cos(angle)*r), int(cy+np.sin(angle)*r)), color, 3)
-
 # This function aims to extract features for various activities 
 def video_feature_extraction_save(videoName, featureWriter, case, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,DISPLAY=False): 
     cv2.namedWindow('rat activity recognition')
@@ -84,10 +76,16 @@ def video_feature_extraction_save(videoName, featureWriter, case, MIN_TIME_DELTA
             cy2 = 0;     
                                        
         meiSize = np.count_nonzero(mei0);
-        
-        featureWriter.writerow((Hu1[0][0],Hu1[1][0],Hu1[2][0],Hu1[3][0],Hu1[4][0],Hu1[5][0],Hu1[6][0],
+        features = [Hu1[0][0],Hu1[1][0],Hu1[2][0],Hu1[3][0],Hu1[4][0],Hu1[5][0],Hu1[6][0],
                                 Hu2[0][0],Hu2[1][0],Hu2[2][0],Hu2[3][0],Hu2[4][0],Hu2[5][0],Hu2[6][0],
-                                cx1, cy1, cx2, cy2, meiSize, case))
+                                cx1, cy1, cx2, cy2, meiSize, case]
+      
+        zeroFeatures = [0]*14
+        if case == 6:# Rest case
+            featureWriter.writerow(features)
+        else:
+            if features[0:len(features)-6] != zeroFeatures:
+                featureWriter.writerow(features)
        
         prev_frame = frame.copy()
                             
@@ -111,7 +109,8 @@ if __name__ == '__main__':
     from os import listdir
     
     activities = ['drink','eat','groom','hang','head','rear','rest','walk']
-    actLens = [30,130,594,139,30,68,720,52]
+    #actLens = [30,130,594,139,30,68,720,52] # Full sizes
+    actLens = [30,120,200,120,30,60,300,50]
     
     folderRoot = 'C:\\InternProjects\\rat_activity_recognition\\MIT_Traning_samples' 
 
@@ -125,7 +124,7 @@ if __name__ == '__main__':
         
         fout = open(featureSaveName, 'wb')
         featureWriter = csv.writer(fout,quoting=csv.QUOTE_NONE)
-        for ii in range(0,actLens[case]/2):
+        for ii in range(0,actLens[case]):
             fullVideoName = subFolderPath +'\\'+ videoNames[ii]
      
             #mhi_video_extraction(fullVideoName, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE) 
