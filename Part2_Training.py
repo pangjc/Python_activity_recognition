@@ -10,7 +10,7 @@ featureFolderPath = 'C:\\InternProjects\\rat_activity_recognition\\MIT_Traning_s
 
 activities = ['drink','eat','groom','hang','head','rear','rest','walk']
 
-cvfolder = 3
+cvfolder = 2
 subFactor = 1
 my_data_label = genfromtxt(featureFolderPath + activities[0] + '_features.csv', delimiter=',')
 num_data = len(my_data_label) 
@@ -21,7 +21,7 @@ my_data_label_test = my_data_label[trainInd[num_data_sub/cvfolder:num_data_sub],
 
 num_col = len(my_data_label[0])
 
-for ii in range(0,8):
+for ii in range(1,8):
     my_data_label1 = genfromtxt(featureFolderPath + activities[ii] + '_features.csv', delimiter=',')
     num_data1 = len(my_data_label1) 
     num_data_sub1 = num_data1/subFactor
@@ -34,16 +34,19 @@ for ii in range(0,8):
 print 'training data size: ' + str(my_data_label_train.shape)
 print 'test data size: ' + str(my_data_label_test.shape)
 
-my_data_train = my_data_label_train[:,num_col-6:num_col-2]  
+my_data_train = my_data_label_train[:,0:num_col-1]  
 my_label_train = my_data_label_train[:,num_col-1]
 my_label_train = my_label_train.astype(int)
 
-my_data_test = my_data_label_test[:,num_col-6:num_col-2]  
+my_data_test = my_data_label_test[:,0:num_col-1]  
 my_label_test = my_data_label_test[:,num_col-1]
 my_label_test = my_label_test.astype(int)
 # Create a classifier: a support vector classifier
 print 'start SVM training ...'
-classifier = svm.SVC()
+classifier = svm.SVC(C=100.0, cache_size=200, class_weight=None, coef0=0.0, degree=3,
+  gamma=0.00001, kernel='rbf', max_iter=-1, probability=False,
+  random_state=None, shrinking=True, tol=0.001, verbose=False)
+
 classifier.fit(my_data_train, my_label_train)
 print 'SVM training finished!'
 # Now predict the value of the digit on the second half:

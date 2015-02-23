@@ -8,12 +8,12 @@ from common import nothing, clock, draw_str
 import csv
 import os
 
-MHI_DURATION = 15
-MAX_TIME_DELTA = 10
-MIN_TIME_DELTA = 5
+MHI_DURATION = 1
+MAX_TIME_DELTA = 0.5
+MIN_TIME_DELTA = 0.05
 THRESH_VALUE = 32
 
-def real_time_evaluation(videoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,DISPLAY=False): 
+def real_time_evaluation(videoName, featureWriter, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,DISPLAY=False): 
     cv2.namedWindow('rat activity recognition')
     visuals = ['input', 'frame_diff', 'motion_hist', 'grad_orient']
     # use MHI features (motion history intensity)
@@ -32,7 +32,8 @@ def real_time_evaluation(videoName, classifier, activities, MIN_TIME_DELTA,MAX_T
     
     #cam.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ii)
      
-    while (ii<video_len):
+    while (ii < video_len):
+    #while (ii<1000):
         ii += 1
         ret, frame = cam.read()
         frame_diff = cv2.absdiff(frame, prev_frame)
@@ -63,6 +64,13 @@ def real_time_evaluation(videoName, classifier, activities, MIN_TIME_DELTA,MAX_T
         Hu1 = cv2.HuMoments(M1)
         Hu2 = cv2.HuMoments(M2)
         
+        smallNum = [1e-200]*7 
+        Hu1 = Hu1 + smallNum
+        Hu2 = Hu2 + smallNum
+        
+        Hu1 = np.sign(Hu1)*np.log10(np.abs(Hu1))
+        Hu2 = np.sign(Hu2)*np.log10(np.abs(Hu2))
+      
         if M1['m00']!=0:
             cx1 = M1['m10']/M1['m00']
             cy1 = M1['m01']/M1['m00']
@@ -79,11 +87,31 @@ def real_time_evaluation(videoName, classifier, activities, MIN_TIME_DELTA,MAX_T
                                        
         meiSize = np.count_nonzero(mei0);
         
+        if meiSize == 0:
+            corner1 = 0
+            corner2 = 0
+            corner3 = 0
+            corner4 = 0
+            height = 0
+            width = 0
+            extend = 0
+        else:
+            indices = np.nonzero(mei0)
+            corner1 = max(indices[0])
+            corner2 = min(indices[0])
+            corner3 = max(indices[1])
+            corner4 = min(indices[1])
+            height = corner1 - corner2+1
+            width = corner3 - corner4+1
+            extend = meiSize/float(height*width)
+            
         features = [Hu1[0][0],Hu1[1][0],Hu1[2][0],Hu1[3][0],Hu1[4][0],Hu1[5][0],Hu1[6][0],
-                                Hu2[0][0],Hu2[1][0],Hu2[2][0],Hu2[3][0],Hu2[4][0],Hu2[5][0],Hu2[6][0],
-                                cx1, cy1, cx2, cy2, meiSize]
+                    Hu2[0][0],Hu2[1][0],Hu2[2][0],Hu2[3][0],Hu2[4][0],Hu2[5][0],Hu2[6][0],
+                    cx1, cy1, cx2, cy2, meiSize, corner1, corner2, corner3, corner4,height, width, extend]
        
-        tag = classifier.predict(features[14:18])
+        featureWriter.writerow(features)
+         
+        tag = classifier.predict(features[0:26])
         activity = activities[tag]  
             
         prev_frame = frame.copy()      
@@ -92,7 +120,10 @@ def real_time_evaluation(videoName, classifier, activities, MIN_TIME_DELTA,MAX_T
         if DISPLAY:
             cv2.putText(frame, activity, (5, 25),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,255,255))
-  
+            vis = cv2.cvtColor(vis0, cv2.COLOR_GRAY2BGR)
+            mei = cv2.cvtColor(mei0, cv2.COLOR_GRAY2BGR)
+            cv2.imshow('MHI', vis)
+            cv2.imshow('MEI', mei)
             cv2.imshow('Video',frame)
             if 0xff & cv2.waitKey(50) == 27:
                 break
@@ -109,9 +140,13 @@ if __name__ == '__main__':
     activities = ['drink','eat','groom','hang','head','rear','rest','walk']
     folderRoot = 'C:\\InternProjects\\rat_activity_recognition\\MIT_Traning_samples' 
     
+    fout = open('video_features.csv', 'wb')
+    featureWriter = csv.writer(fout,quoting=csv.QUOTE_NONE)
+         
     testVideoName = 'C:\\InternProjects\\MIT_NatureSetUp\\full_database\\20080422170445.mpg'    
-    real_time_evaluation(testVideoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
-  
+    real_time_evaluation(testVideoName, featureWriter,classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
+    fout.close()
+
 '''
     for case in range(3,4):
         subFolderPath = folderRoot + '\\' + activities[case]
@@ -121,7 +156,6 @@ if __name__ == '__main__':
 
         for ii in range(0,actLens[case]):
             testVideoName = subFolderPath +'\\'+ videoNames[ii]
-            real_time_evaluation(testVideoName, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
-'''  
-
-        
+            real_time_evaluation(testVideoName, featureWriter,classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
+    fout.close() 
+'''

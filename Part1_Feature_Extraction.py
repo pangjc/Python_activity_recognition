@@ -2,16 +2,16 @@
 
 # Added generation of csv files containing features
 # Added loop for all activities
+#
 import numpy as np
 import cv2
-from common import nothing, clock, draw_str
+from common import nothing, clock,draw_str
 import csv
 import os
 
-
-MHI_DURATION = 15
-MAX_TIME_DELTA = 10
-MIN_TIME_DELTA = 5
+MHI_DURATION = 1
+MAX_TIME_DELTA = 0.5 # No usage for now
+MIN_TIME_DELTA = 0.05 # No usage for now
 THRESH_VALUE = 32
 
 # This function aims to extract features for various activities 
@@ -61,6 +61,13 @@ def video_feature_extraction_save(videoName, featureWriter, case, MIN_TIME_DELTA
         Hu1 = cv2.HuMoments(M1)
         Hu2 = cv2.HuMoments(M2)
         
+        smallNum = [1e-200]*7 
+        Hu1 = Hu1 + smallNum
+        Hu2 = Hu2 + smallNum
+        
+        Hu1 = np.sign(Hu1)*np.log10(np.abs(Hu1))
+        Hu2 = np.sign(Hu2)*np.log10(np.abs(Hu2))
+        
         if M1['m00']!=0:
             cx1 = M1['m10']/M1['m00']
             cy1 = M1['m01']/M1['m00']
@@ -76,11 +83,31 @@ def video_feature_extraction_save(videoName, featureWriter, case, MIN_TIME_DELTA
             cy2 = 0;     
                                        
         meiSize = np.count_nonzero(mei0);
+        
+        if meiSize == 0:
+            corner1 = 0
+            corner2 = 0
+            corner3 = 0
+            corner4 = 0
+            height = 0
+            width = 0
+            extend = 0
+        else:
+            indices = np.nonzero(mei0)
+            corner1 = max(indices[0])
+            corner2 = min(indices[0])
+            corner3 = max(indices[1])
+            corner4 = min(indices[1])
+            height = corner1 - corner2+1
+            width = corner3 - corner4+1
+            extend = meiSize/float(height*width)
+        
         features = [Hu1[0][0],Hu1[1][0],Hu1[2][0],Hu1[3][0],Hu1[4][0],Hu1[5][0],Hu1[6][0],
-                                Hu2[0][0],Hu2[1][0],Hu2[2][0],Hu2[3][0],Hu2[4][0],Hu2[5][0],Hu2[6][0],
-                                cx1, cy1, cx2, cy2, meiSize, case]
+                    Hu2[0][0],Hu2[1][0],Hu2[2][0],Hu2[3][0],Hu2[4][0],Hu2[5][0],Hu2[6][0],
+                    cx1, cy1, cx2, cy2, meiSize, corner1, corner2, corner3,corner4, height, width, extend, case]
       
-        zeroFeatures = [0]*14
+        zeroFeatures = [-200]*14
+        #zeroFeatures = [0]*14
         if case == 6:# Rest case
             featureWriter.writerow(features)
         else:
@@ -109,8 +136,8 @@ if __name__ == '__main__':
     from os import listdir
     
     activities = ['drink','eat','groom','hang','head','rear','rest','walk']
-    #actLens = [30,130,594,139,30,68,720,52] # Full sizes
-    actLens = [30,120,200,120,30,60,300,50]
+    actLens = [30,130,594,139,30,68,720,52] # Full sizes
+    #actLens = [30,120,200,120,30,60,300,50]
     
     folderRoot = 'C:\\InternProjects\\rat_activity_recognition\\MIT_Traning_samples' 
 
@@ -128,7 +155,8 @@ if __name__ == '__main__':
             fullVideoName = subFolderPath +'\\'+ videoNames[ii]
      
             #mhi_video_extraction(fullVideoName, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE) 
-            video_feature_extraction_save(fullVideoName, featureWriter, case, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,False)
+            video_feature_extraction_save(fullVideoName, featureWriter, case, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,
+                                          THRESH_VALUE,False)
 
         fout.close()
         # Set output the csv file 
