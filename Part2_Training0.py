@@ -1,5 +1,7 @@
+# version 0 works for the MIT experimental set up
+
 print(__doc__)
-# Added shuffling for cross-validation
+
 import csv
 import numpy as np
 from numpy import genfromtxt

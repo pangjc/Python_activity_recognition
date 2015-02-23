@@ -1,7 +1,5 @@
-#!/usr/bin/env python
+# version 0 works for the MIT experimental set up
 
-# Added generation of csv files containing features
-# Added loop for all activities
 import numpy as np
 import cv2
 from common import nothing, clock, draw_str
