@@ -57,12 +57,10 @@ class Window(tk.Frame):
         #fourcc = cv2.cv.CV_FOURCC(*'XVID')
         #fourcc = cv2.cv.CV_FOURCC('M','J','P','G')
         fourcc = cv2.cv.CV_FOURCC(*'XVID')
-        fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+        #fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+        fps = 15.0
         outputVideoName = dirName+"/"+videoBaseName+"_trackResults.avi";
         out = cv2.VideoWriter(outputVideoName,fourcc, fps, (width,height))
-        
-        if (not out.isOpened()):
-            print 'error'
             
         #out = cv2.VideoWriter(outputVideoName,-1, fps, (width,height))
         # Same as ginput() in Matlab 
@@ -213,15 +211,18 @@ class Window(tk.Frame):
                 
             
             mouse = np.zeros_like(frame0)
-            mouse[:,:,0] = cv2.add(fgmask21,fgmask22)
+
+            mouse[:,:,1] = cv2.add(fgmask21,fgmask22)
+            mouse[:,:,2] = cv2.add(fgmask21,fgmask22)
         
             if contour01:
-                mouse[cy1-1:cy1+1,cx1-1:cx1+1,1] = 255
-                
+                mouse[cy1-1:cy1+1,cx1-1:cx1+1,0] = 0
+                mouse[cy1-1:cy1+1,cx1-1:cx1+1,1] = 0
             if contour01:
-                mouse[cy2-1:cy2+1,cx2-1:cx2+1,1] = 255
+                mouse[cy2-1:cy2+1,cx2-1:cx2+1,0] = 0
+                mouse[cy2-1:cy2+1,cx2-1:cx2+1,1] = 0
               
-            frame_results = cv2.add(frame0,mouse) 
+            frame_results = cv2.subtract(frame0,mouse) 
           
             cv2.imshow('frame0',frame_results)
             k = cv2.waitKey(30) & 0xff
