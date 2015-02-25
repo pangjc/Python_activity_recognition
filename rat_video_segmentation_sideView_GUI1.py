@@ -121,6 +121,7 @@ class Window(tk.Frame):
             mask = cv2.cvtColor(mask0,cv2.COLOR_BGR2GRAY)
         
             return mask0, mask
+            # end of function definition:select_valid_region_sideView
         videoName = tkFileDialog.askopenfilename()
         (dirName,videoBaseName0) = os.path.split(videoName)
         (videoBaseName, videoExtension) = os.path.splitext(videoBaseName0)
@@ -215,6 +216,3 @@ app = Window(root)
 
 root.mainloop()
         
-        
-        
- 

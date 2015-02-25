@@ -27,8 +27,6 @@ class Window(tk.Frame):
         loadVideoButton.place(x = 0, y = 0)
         quitButton.place(x = 80, y = 0)       
  
-    
- 
     def client_load(self):
         
         def segmentation_frame(frame0,frame_base,maskRegion,kernel):
@@ -143,14 +141,12 @@ class Window(tk.Frame):
         cap = cv2.VideoCapture(videoName)
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,200)
         ret,frame_input0 = cap.read()      
-        frame_input = cv2.cvtColor(frame_input0,cv2.COLOR_BGR2GRAY)
-        cap.release()
-               
+        frame_input = cv2.cvtColor(frame_input0,cv2.COLOR_BGR2GRAY)               
         width = np.size(frame_input, 1) 
         height = np.size(frame_input, 0)
         #fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
         fps = 15.0
-        
+        cap.release()
         # Specify out put video information
         #fourcc = cv2.cv.CV_FOURCC('M','J','P','G')
         fourcc = cv2.cv.CV_FOURCC(*'XVID')
