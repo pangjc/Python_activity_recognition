@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from pylab import ginput
 import csv
 import os.path
-from cv2 import VideoCapture
 
 # A gui version for video segmentation 
 # Modification over version 0: use module blocks for rats over left and right 
@@ -26,8 +25,6 @@ class Window(tk.Frame):
         quitButton = tk.Button(self,text = "Quit", command = self.client_exit)
         loadVideoButton.place(x = 0, y = 0)
         quitButton.place(x = 80, y = 0)       
- 
-    
  
     def client_load(self):
         
@@ -104,77 +101,68 @@ class Window(tk.Frame):
             frame_base = np.uint8(frame_ref0)
             return frame_base
         # end of function definition: extract_background
-        def select_valid_region_topView(frame_input):
+        def select_valid_region_sideView(frame_input):
             inputFig = plt.figure()
-            plt.title('Select points to define valid regions:top View')    
+            plt.title('Select arm points')    
             plt.imshow(frame_input, cmap = 'gray', interpolation = 'bicubic')
             # Same as ginput() in Matlab 
             region_ptList = ginput(8)
             plt.close(inputFig)
-        
+            
             region_ptArray0 = np.asarray(region_ptList)
             region_ptArray = region_ptArray0.astype(int)
             region_ptArray = np.vstack((region_ptArray, region_ptArray[0,:]))
-        
-            # Get the arms A,B,C,U
-            pointsLeft = region_ptArray[0:4,:]
-            maskLeft0 = np.zeros(frame_input.shape[:2],dtype = 'uint8')
-            cv2.drawContours(maskLeft0,[pointsLeft],0,255,-1)
-            maskLeft0 = cv2.cvtColor(maskLeft0,cv2.COLOR_GRAY2BGR)
-            maskLeft = cv2.cvtColor(maskLeft0,cv2.COLOR_BGR2GRAY)
-     
-            pointsRight = region_ptArray[4:8,:]
-            maskRight0 = np.zeros(frame_input.shape[:2],dtype = 'uint8')
-            cv2.drawContours(maskRight0,[pointsRight],0,255,-1)
-            maskRight0 = cv2.cvtColor(maskRight0,cv2.COLOR_GRAY2BGR)
-            maskRight = cv2.cvtColor(maskRight0,cv2.COLOR_BGR2GRAY)
             
-            return maskLeft0, maskLeft, maskRight0, maskRight
-
-            # end of function definition: select_valid_region_topView
+            # Get the arms A,B,C,U
+            mask_points = region_ptArray
+            mask0 = np.zeros(frame_input.shape[:2],dtype = 'uint8')
+            cv2.drawContours(mask0,[mask_points],0,255,-1)
+            mask0 = cv2.cvtColor(mask0,cv2.COLOR_GRAY2BGR)
+            mask = cv2.cvtColor(mask0,cv2.COLOR_BGR2GRAY)
         
-        
-        # Small GUI to load video to be processed
+            return mask0, mask
         videoName = tkFileDialog.askopenfilename()
         (dirName,videoBaseName0) = os.path.split(videoName)
         (videoBaseName, videoExtension) = os.path.splitext(videoBaseName0)
-         
-        # Load the video and get one frame to display and video information
+        
+        ###########################
+        # Select points to detrmine Y maze arms
         cap = cv2.VideoCapture(videoName)
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,200)
         ret,frame_input0 = cap.read()      
         frame_input = cv2.cvtColor(frame_input0,cv2.COLOR_BGR2GRAY)
-        cap.release()
-               
         width = np.size(frame_input, 1) 
         height = np.size(frame_input, 0)
         #fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+        #print fps
         fps = 15.0
-        
-        # Specify out put video information
+        cap.release()
+        # Specify output video
+        #fourcc = cv2.cv.CV_FOURCC(*'XVID')
         #fourcc = cv2.cv.CV_FOURCC('M','J','P','G')
         fourcc = cv2.cv.CV_FOURCC(*'XVID')
+
         outputVideoName = dirName+"/"+videoBaseName+"_trackResults.avi";
         out = cv2.VideoWriter(outputVideoName,fourcc, fps, (width,height))
-        
-        # Specify valid region to perform segmentation      
-        maskLeft0,maskLeft,maskRight0,maskRight = select_valid_region_topView(frame_input)
-       
+            
+        #out = cv2.VideoWriter(outputVideoName,-1, fps, (width,height))     
         # Create color image of effect region to save 
-        mask0 = maskLeft0 + maskRight0
-        mask = maskLeft + maskRight
+        mask0, mask = select_valid_region_sideView(frame_input)
         mask_toSave = np.zeros(mask0.shape[:3],dtype = 'uint8')
         mask_toSave[:,:,2] = mask
         mask_toSave[:,:,1] = mask
         mask_toSave[:,:,0] = mask
+    
+        
         validRegionImageName =  dirName+"/"+videoBaseName+"_effect_region.tif" 
         cv2.imwrite(validRegionImageName,mask_toSave)
-   
-        # Read the whole video and extract the background as the base frame instead of using a slider
+        
+        # Extract the background as the base frame instead of using a slider
         frame_base = extract_background(videoName)
+        
         backgroundImageName =  dirName+"/"+videoBaseName+"_background.tif" 
-        cv2.imwrite(backgroundImageName,frame_base)      
-
+        cv2.imwrite(backgroundImageName,frame_base)
+        
         # Smooth the reference/base frame        
         frame_base = cv2.GaussianBlur(frame_base,(7,7),0) 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(7,7))
@@ -194,13 +182,10 @@ class Window(tk.Frame):
         for ii in range(50,length-10):
             ret,frame0 = cap.read()
             
-            mouseLeft, featuresLeft = segmentation_frame(frame0,frame_base,maskLeft,kernel)
-            mouseRight, featuresRight = segmentation_frame(frame0,frame_base,maskRight,kernel)
-            
-            mouse = np.zeros_like(frame0)  
-            mouse = cv2.add(mouseLeft,mouseRight)
+            mouse, features = segmentation_frame(frame0,frame_base,mask,kernel)
+        
             frame_results = cv2.subtract(frame0,mouse) 
-          
+                 
             cv2.imshow('frame0',frame_results)
             k = cv2.waitKey(30) & 0xff
             if k == 27:
@@ -213,8 +198,7 @@ class Window(tk.Frame):
             # Out put information such as frame number, area size etc
             ifr = round(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)) 
             
-            features = [videoName] + [ifr] + featuresLeft + featuresRight
-                 
+            features = [videoName] + [ifr] + features
             writer.writerow(features)
         
         cap.release()
@@ -224,9 +208,7 @@ class Window(tk.Frame):
     
     def client_exit(self):
         sys.exit(0)
-        
-        
-    
+           
 root = tk.Tk()
 root.geometry("300x100")
 app = Window(root)
