@@ -7,6 +7,7 @@ import numpy as np
 from numpy import genfromtxt
 from sklearn import svm, metrics
 import pickle
+import matplotlib.pyplot as plt
 
 featureFolderPath = 'C:\\InternProjects\\rat_activity_recognition\\MIT_Traning_samples\\_Feature_Exact\\'
 
@@ -70,6 +71,21 @@ print("Confusion matrix for test set:\n%s" % metrics.confusion_matrix(expected_t
 # Save the trained classifier into disk
 from sklearn.externals import joblib
 joblib.dump(classifier,'mySVM.pkl')
+
+# Draw confusion matrix 
+cm = metrics.confusion_matrix(expected_test, predicted_test)
+cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+plt.matshow(cm_normalized)
+plt.title('Normalized confusion matrix')
+plt.colorbar()
+
+tick_marks = np.arange(len(activities))
+plt.xticks(tick_marks, activities)
+plt.yticks(tick_marks, activities)
+    
+plt.ylabel('True label')
+plt.xlabel('Predicted label')
+plt.show()
 
 # classifier1 = joblib.load('mySVM.pkl')
 

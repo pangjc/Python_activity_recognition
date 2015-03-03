@@ -1,4 +1,6 @@
 # version 0 works for the MIT experimental set up
+# added output video with results
+  
 
 import numpy as np
 import cv2
@@ -11,7 +13,7 @@ MAX_TIME_DELTA = 0.5
 MIN_TIME_DELTA = 0.05
 THRESH_VALUE = 32
 
-def real_time_evaluation(videoName, featureWriter, classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,DISPLAY=False): 
+def real_time_evaluation(videoName, featureWriter,classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,DISPLAY=False): 
     cv2.namedWindow('rat activity recognition')
     visuals = ['input', 'frame_diff', 'motion_hist', 'grad_orient']
     # use MHI features (motion history intensity)
@@ -26,11 +28,19 @@ def real_time_evaluation(videoName, featureWriter, classifier, activities, MIN_T
     hsv = np.zeros((h, w, 3), np.uint8)
     hsv[:,:,1] = 255
     
+    
+    fps = 15.0
+    fourcc = cv2.cv.CV_FOURCC(*'XVID')
+
+    outputVideoName = "activityRecognitionResults.avi";
+    VideoOutput = cv2.VideoWriter(outputVideoName,fourcc, fps, (w,h))   
+    
+    
     ii = 0        
     
     #cam.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ii)
      
-    while (ii < video_len):
+    while (ii < video_len/2):
     #while (ii<1000):
         ii += 1
         ret, frame = cam.read()
@@ -123,7 +133,9 @@ def real_time_evaluation(videoName, featureWriter, classifier, activities, MIN_T
             cv2.imshow('MHI', vis)
             cv2.imshow('MEI', mei)
             cv2.imshow('Video',frame)
-            if 0xff & cv2.waitKey(50) == 27:
+            VideoOutput.write(frame)
+            
+            if 0xff & cv2.waitKey(1) == 27:
                 break
             
     cam.release()

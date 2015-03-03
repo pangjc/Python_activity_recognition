@@ -248,6 +248,8 @@ class Window(tk.Frame):
             ret,frameSide10 = capSide1.read()
             ret,frameTop0 = capTop.read()
             
+            #print 'side camera time: ' + str(capSide1.get(cv2.cv.CV_CAP_PROP_POS_MSEC))
+            #print 'top camera time: ' + str(capTop.get(cv2.cv.CV_CAP_PROP_POS_MSEC))
             # Top view camera    
             mouseTopLeft, featuresTopLeft = segmentation_frame(frameTop0,frame_baseTop,maskTopLeft,kernel)
             mouseTopRight, featuresTopRight = segmentation_frame(frameTop0,frame_baseTop,maskTopRight,kernel)
