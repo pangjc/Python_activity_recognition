@@ -79,9 +79,10 @@ plt.matshow(cm_normalized)
 plt.title('Normalized confusion matrix')
 plt.colorbar()
 
-tick_marks = np.arange(len(activities))
-plt.xticks(tick_marks, activities)
-plt.yticks(tick_marks, activities)
+activitiesNames = ['drink','eat','groom','hang','micromovement','rear','rest','walk']
+tick_marks = np.arange(len(activitiesNames))
+plt.xticks(tick_marks, activitiesNames)
+plt.yticks(tick_marks, activitiesNames)
     
 plt.ylabel('True label')
 plt.xlabel('Predicted label')

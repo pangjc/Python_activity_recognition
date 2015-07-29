@@ -40,7 +40,7 @@ def real_time_evaluation(videoName, featureWriter,classifier, activities, MIN_TI
     
     #cam.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ii)
      
-    while (ii < video_len/2):
+    while (ii < video_len):
     #while (ii<1000):
         ii += 1
         ret, frame = cam.read()
@@ -135,7 +135,7 @@ def real_time_evaluation(videoName, featureWriter,classifier, activities, MIN_TI
             cv2.imshow('Video',frame)
             VideoOutput.write(frame)
             
-            if 0xff & cv2.waitKey(1) == 27:
+            if 0xff & cv2.waitKey(50) == 27:
                 break
             
     cam.release()
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     fout = open('video_features.csv', 'wb')
     featureWriter = csv.writer(fout,quoting=csv.QUOTE_NONE)
          
-    testVideoName = 'C:\\InternProjects\\MIT_NatureSetUp\\full_database\\20080422170445.mpg'    
+    testVideoName = 'C:\\InternProjects\\MIT_NatureSetUp\\full_database\\20080423_191834F.mpg'    
     real_time_evaluation(testVideoName, featureWriter,classifier, activities, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
     fout.close()
 
