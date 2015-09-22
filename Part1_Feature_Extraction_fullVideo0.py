@@ -146,6 +146,7 @@ if __name__ == '__main__':
     fout = open('video_features.csv', 'wb')
     featureWriter = csv.writer(fout,quoting=csv.QUOTE_NONE)
          
-    testVideoName = 'C:\\InternProjects\\MIT_NatureSetUp\\full_database\\20080423_191834F.mpg'    
-    feature_extraction_fullVideo(testVideoName, featureWriter, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,False)
+    #testVideoName = 'C:\\InternProjects\\MIT_NatureSetUp\\full_database\\20080423_191834F.mpg'    
+    testVideoName = 'C:\\PostDoctorProjects\VideoEEGData\\20150514_JD_Cam1_Cages3_4_combined\\JD_Cam1_2015_0514_Cages3_4.avi'
+    feature_extraction_fullVideo(testVideoName, featureWriter, MIN_TIME_DELTA,MAX_TIME_DELTA,MHI_DURATION,THRESH_VALUE,True)
     fout.close()

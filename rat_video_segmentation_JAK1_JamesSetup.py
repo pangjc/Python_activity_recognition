@@ -4,7 +4,7 @@ import csv
 import os.path
 import matplotlib.pyplot as plt
 from pylab import ginput
-
+import time
 
 help_message = '''
 USAGE: behavior features study for JAKli videos [<video_source>]
@@ -120,7 +120,7 @@ if __name__ == '__main__':
         videoName = sys.argv[1]
     except:
         #fn = 0
-        videoName = 'C:\\PostDoctorProjects\VideoEEGData\\20150514_JD_Cam2_Cages1_2_combined\\JD_Cam2_20150514Cages1_2.avi'
+        videoName = 'C:\\PostDoctorProjects\VideoEEGData\\20150514_JD_Cam1_Cages3_4_combined\\JD_Cam1_2015_0514_Cages3_4.avi'
         print help_message
 
 
@@ -211,7 +211,8 @@ cv2.imwrite(backgroundImageName,frame_base)
         #while(cap.isOpened()):
 frame_base = cv2.GaussianBlur(frame_base,(3,3),0) 
 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
-for ii in range(0,length-5):
+tic = time.time()
+for ii in range(0,length-startFrame-5):
     ret,frame0 = cap.read()
     
     mouse, features = segmentation_frame(frame0,frame_base,mask,kernel)
@@ -234,7 +235,8 @@ for ii in range(0,length-5):
     
     features = [videoName] + [ifr] + features
     writer.writerow(features)
-
+toc = time.time()
+print 'running time: ' + (toc-tic)
 cap.release()
 out.release()
 fout.close()

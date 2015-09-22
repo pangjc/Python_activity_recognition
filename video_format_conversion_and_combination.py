@@ -37,13 +37,13 @@ def get_frame_numbers(videoNameRoot,videoNames,startVideoInd,videoNum):
     return frameLens        
   # Specify videos to be analyzed
 startVideoInd = 0
-videoNum = 29
+videoNum = 108
 
-videoNameRoot = 'C:\\PostDoctorProjects\\VideoEEGData\\Shank2_20150609\\video_raw'
+videoNameRoot = 'C:\\PostDoctorProjects\\VideoEEGData\\overnight908_909\\Box1'
 videoNames = listdir(videoNameRoot)
 videoNameSeg1 = videoNameRoot+'\\' + videoNames[startVideoInd]
 (dirNameSeg1,videoBaseNameSeg10) = os.path.split(videoNameSeg1)
-dirNameSegOut = 'C:\\PostDoctorProjects\\VideoEEGData\\Shank2_20150609\\video_stitched'
+dirNameSegOut = 'C:\\PostDoctorProjects\\VideoEEGData\\overnight908_909\\Box1_stitched'
 (videoBaseNameSeg1, videoExtensionSeg1) = os.path.splitext(videoBaseNameSeg10)
 
 
@@ -84,5 +84,3 @@ capSeg1 = cv2.VideoCapture(outputVideoNameSeg)
 lengthOutput = int(capSeg1.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))     
 print lengthOutput        
         
-        
- 
